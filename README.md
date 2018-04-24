@@ -1,6 +1,6 @@
 # `tmle3`: Implementing Frameworks, Not Algorithms
 
-> This is an introductory lecture on the [`tmle3`](https://tmle33.tlverse.org/)
+> This is an introductory lecture on the [`tmle3`](https://tmle3.tlverse.org/)
 > framework for Targeted Learning.
 
 ## Abstract
