@@ -377,20 +377,39 @@ In `tmle3`, interventions are modeled by likelihoods where one or more likelihoo
 
 `tmle3` defines the `CF_Likelihood` class, which inherits from `Likelihood`, and takes an `observed_likelihood` and an `intervention_list`. 
 
-For our CPP example, we'll define a simple intervention where we set all treatment $A=1$:
+For our CPP example, we'll define a simple intervention where we set all treatment $A=1$. We do this by defining a static likelihood factor, as a simple indicator function $P(A|W)=I(A=1)$
 
 ```{r intervention}
 intervention <- define_lf(LF_static, "A", value = 1)
 ```
 
+We can then use this to construct a counterfactual likelihood:
 
+```{r cf_likelihood}
+cf_likelihood <- make_CF_Likelihood(likelihood, intervention)
+```
+
+A `cf_likelihood` is a likelihood object, and so has the same behavior as the observed likelihood object defined above, but with the observed likelihood factors being replaced by the defined intervention likelihood factors.
+
+---
+
+# Counterfactuals -- `CF_Likelihood`
+
+In particular, we can get likelihood values under the counterfactual likelihood:
+
+```{r cf_likelihood values}
+cf_likelihood_values <- cf_likelihood$get_likelihoods(tmle_task)
+head(cf_likelihood_values)
+```
+
+We see that the likelihood values for the $A$ node are all either 0 or 1, as would be expected from an indicator likelihood function. In addition, the likelihood values for the non-intervention nodes have not changed.
 ---
 
 # Parameter -- `Param_base`
 
 In the TMLE framework, we define a target parameter $\Psi(P)$ as a mapping from a probability distribution $P \in \mathcal{M}$ to a set of real numbers $\mathbb{R}^d$. Here $\mathcal{M}$ is implied by the NPSEM we defined above. 
 
-In `tmle3`, we define parameter objects as objects inheriting from the `Param_base` class, which keep track of not only the mapping from a probability distribution to a parameter value, but also the corresponding EIF of the parameter, and the "clever covariates" needed to calculate a TMLE update to the likelihood.
+In `tmle3`, we define parameter objects as objects inheriting from the `Param_base` class, which keep track of not only the mapping from a probability distribution to a parameter value, but also the corresponding EIF of the parameter, and the "clever covariates" needed to calculate a TMLE update to the likelihood. These values are calculated using the `tmle3_task`, `Likelihood`, and `CF_likelihood` objects defined above.
 
 
 Here, we define a treatment specific mean (TSM) parameter based on the intervention we defined previously:

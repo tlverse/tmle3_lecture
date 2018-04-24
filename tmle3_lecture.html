@@ -260,7 +260,7 @@ mean(IC)
 ```
 
 ```
-## [1] 1.759326e-12
+## [1] 1.734641e-12
 ```
 
 ```r
@@ -271,7 +271,7 @@ print(psi_hat)
 ```
 
 ```
-## [1] 0.5280049
+## [1] 0.5280096
 ```
 
 ---
@@ -388,12 +388,12 @@ head(likelihood_values)
 
 ```
 ##               W         A         Y
-## 1: 0.0006939625 0.6326742 0.5763022
-## 2: 0.0006939625 0.6326742 0.5763022
-## 3: 0.0006939625 0.8372564 0.6740245
-## 4: 0.0006939625 0.8372564 0.3259755
-## 5: 0.0006939625 0.8372564 0.3259755
-## 6: 0.0006939625 0.5908019 0.4651738
+## 1: 0.0006939625 0.6332433 0.5752499
+## 2: 0.0006939625 0.6332433 0.5752499
+## 3: 0.0006939625 0.8371100 0.6715504
+## 4: 0.0006939625 0.8371100 0.3284496
+## 5: 0.0006939625 0.8371100 0.3284496
+## 6: 0.0006939625 0.5913334 0.4657384
 ```
 
 ---
@@ -405,21 +405,52 @@ In `tmle3`, interventions are modeled by likelihoods where one or more likelihoo
 
 `tmle3` defines the `CF_Likelihood` class, which inherits from `Likelihood`, and takes an `observed_likelihood` and an `intervention_list`. 
 
-For our CPP example, we'll define a simple intervention where we set all treatment `\(A=1\)`:
+For our CPP example, we'll define a simple intervention where we set all treatment `\(A=1\)`. We do this by defining a static likelihood factor, as a simple indicator function `\(P(A|W)=I(A=1)\)`
 
 
 ```r
 intervention &lt;- define_lf(LF_static, "A", value = 1)
 ```
 
+We can then use this to construct a counterfactual likelihood:
 
+
+```r
+cf_likelihood &lt;- make_CF_Likelihood(likelihood, intervention)
+```
+
+A `cf_likelihood` is a likelihood object, and so has the same behavior as the observed likelihood object defined above, but with the observed likelihood factors being replaced by the defined intervention likelihood factors.
+
+---
+
+# Counterfactuals -- `CF_Likelihood`
+
+In particular, we can get likelihood values under the counterfactual likelihood:
+
+
+```r
+cf_likelihood_values &lt;- cf_likelihood$get_likelihoods(tmle_task)
+head(cf_likelihood_values)
+```
+
+```
+##               W A         Y
+## 1: 0.0006939625 1 0.5752499
+## 2: 0.0006939625 1 0.5752499
+## 3: 0.0006939625 0 0.6715504
+## 4: 0.0006939625 0 0.3284496
+## 5: 0.0006939625 0 0.3284496
+## 6: 0.0006939625 1 0.4657384
+```
+
+We see that the likelihood values for the `\(A\)` node are all either 0 or 1, as would be expected from an indicator likelihood function. In addition, the likelihood values for the non-intervention nodes have not changed.
 ---
 
 # Parameter -- `Param_base`
 
 In the TMLE framework, we define a target parameter `\(\Psi(P)\)` as a mapping from a probability distribution `\(P \in \mathcal{M}\)` to a set of real numbers `\(\mathbb{R}^d\)`. Here `\(\mathcal{M}\)` is implied by the NPSEM we defined above. 
 
-In `tmle3`, we define parameter objects as objects inheriting from the `Param_base` class, which keep track of not only the mapping from a probability distribution to a parameter value, but also the corresponding EIF of the parameter, and the "clever covariates" needed to calculate a TMLE update to the likelihood.
+In `tmle3`, we define parameter objects as objects inheriting from the `Param_base` class, which keep track of not only the mapping from a probability distribution to a parameter value, but also the corresponding EIF of the parameter, and the "clever covariates" needed to calculate a TMLE update to the likelihood. These values are calculated using the `tmle3_task`, `Likelihood`, and `CF_likelihood` objects defined above.
 
 
 Here, we define a treatment specific mean (TSM) parameter based on the intervention we defined previously:
@@ -459,10 +490,10 @@ print(tmle_fit)
 
 ```
 ## A tmle3_Fit that took 1 step(s)
-##         param  init_est  tmle_est         se    lower     upper
-## 1: E[Y_{A=1}] 0.5145482 0.5287844 0.01452852 0.500309 0.5572597
+##         param  init_est  tmle_est         se     lower     upper
+## 1: E[Y_{A=1}] 0.5143429 0.5287877 0.01451741 0.5003341 0.5572413
 ##    psi_transformed lower_transformed upper_transformed
-## 1:       0.5287844          0.500309         0.5572597
+## 1:       0.5287877         0.5003341         0.5572413
 ```
 
 Currently, the solver is iterative, but we plan to extend it to accomodate the one-step approach.
@@ -491,11 +522,11 @@ print(tmle_fit_from_spec)
 ```
 ## A tmle3_Fit that took 1 step(s)
 ##         param  init_est  tmle_est         se      lower     upper
-## 1: E[Y_{A=0}] 0.5270547 0.5263866 0.34120986 -0.1423725 1.1951456
-## 2: E[Y_{A=1}] 0.5143096 0.5288599 0.01451604  0.5004090 0.5573108
+## 1: E[Y_{A=0}] 0.5273510 0.5267896 0.33314305 -0.1261588 1.1797380
+## 2: E[Y_{A=1}] 0.5144147 0.5288086 0.01452034  0.5003492 0.5572679
 ##    psi_transformed lower_transformed upper_transformed
-## 1:       0.5263866        -0.1423725         1.1951456
-## 2:       0.5288599         0.5004090         0.5573108
+## 1:       0.5267896        -0.1261588         1.1797380
+## 2:       0.5288086         0.5003492         0.5572679
 ```
 
 ---
