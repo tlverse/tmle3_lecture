@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>tlverse: Implement frameworks, not algorithms</title>
+    <meta charset="utf-8">
+    <meta name="date" content="2018-04-18" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link rel="stylesheet" href="custom.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# tlverse: Implement frameworks, not algorithms
+### 04/18/2018
+
+---
+
+
+
+
+class: center, middle
+
+# `tlverse`: The Targeted Learning Analytics Ecosystem
+
+---
+
+# The `tlverse` Ecosystem I
+
+What is the `tlverse`?
+
+By analogy to [`tidyverse`](https://www.tidyverse.org/):
+
+&gt; The tidyverse is an opinionated collection of R packages designed for data science. All packages share an underlying design philosophy, grammar, and data structures. 
+
+So, `tlverse` is:
+
+* an opinioned collection of R packages for Targeted Learning
+* sharing an underlying philosophy, grammar, and data structures
+
+---
+
+# The `tlverse` Ecosystem II
+
+These are the main packages that represent the **core** of `tlverse`:
+
+--
+
+* [`sl3`](https://github.com/jeremyrcoyle/sl3)
+  * _What?_ A modern object-oriented re-implementation of the Super Learner
+    algorithm, employing recently developed paradigms for `R` programming.
+  * _Why?_ A design that leverages modern tools for fast computation, is
+    forward-looking, and can form one of the cornerstones of the `tlverse`.
+
+--
+
+* [`tmle3`](https://github.com/jeremyrcoyle/tmle3)
+  * _What?_ A generalized framework that simplifies Targeted Learning by
+    identifying and implementing a series of common regression procedures.
+  * _Why?_ A common interface and engine that accommodates current algorithmic
+    approaches to Targeted Learning and is still flexible enough to remain the
+    engine even as new techniques are developed.
+
+---
+
+# The `tlverse` Ecosystem III
+
+In addition to the engines that drive development in the `tlverse`, there are
+some supporting packages -- in particular, we have two...
+
+--
+
+* [`origami`](https://github.com/jeremyrcoyle/origami)
+  * _What?_ A generalized framework for flexible cross-validation
+  * _Why?_ Cross-validation is a key part of ensuring error estimates are honest
+    and preventing overfitting. It is an essential part of the both the Super
+    Learner algorithm and Targeted Learning.
+
+--
+
+* [`delayed`](https://github.com/jeremyrcoyle/delayed)
+  * _What?_ A framework for delayed computations (futures) based on task
+    dependencies.
+  * _Why?_ Efficient allocation of compute resources is essential when deploying
+    large-scale, computationally intensive algorithms.
+
+
+---
+
+# The Problem
+
+--
+
+Mark is too productive. Even for point treatment data, we have a huge range of TMLE methodologies:
+* **TMLE Variants:** TMLE, IPCW-TMLE, CV-TMLE, C-TMLE, One-step TMLE, HAL-TMLE, etc
+* **Parameters:** Means under static interventions, dynamic rules, stochastic interventions, ATE, ATT, CDE, NDE, Blip Variance, etc, etc.
+
+--
+
+For each TMLE-based method, someone has probably implemented the estimator at least well enough to run simulations for a paper. However, those implementations are not often maintained after the paper is published, and they might not have been terribly robust in the first place. Example: `opttx`. That means that these methds are not easy for your average user to apply.
+
+---
+
+# The Solution - `tlverse/tmle3`
+
+* Identify the parts of the framework common across a range of methods, and implement those.
+* Build tools to let others build on the framework
+* Build a unified and accessible user interface to these methods
+* Establish a good software development community so that the project can persist past the interest of any one developer.
+
+---
+# It's Roadmap Time!
+
+Steps 1-3: Define the research question
+
+**Data:** `\(O=(W \in \mathbb{R}^D ,A \in \{0,1\},Y\in \{0,1\})\)` drawn i.i.d. from `\(P_0\)`.
+
+**Model:** `\(\mathcal{M}\)`, a nonparametric model that makes no assumptions on `\(P_0\)`. 
+
+We will consider a likelihood factorization `\(P_0=P_0(Y|A,W)P_0(A|W)P_0(W)\)`
+**TODO**
+
+**Parameter:** Treatment Specific Mean `\(\Psi(P)=E_W[E[Y|A=1,W]]\)`
+
+---
+# It's Roadmap Time!
+Steps 4-6: Estimation
+
+**Super Learner (Likelihood Estimation):** Identify and estimate the relevant likelihood factors with Super Learner (`sl3`).
+**TMLE:** Update our initial likelihood estimates to solve the EIF, apply parameter mapping to updated likelihood.
+**Inference:** Use the variance of the IC to construct confidence intervals
+
+---
+
+# CPP Example - Define the research question
+
+We use data from the Collaborative Perinatal Project (CPP), available in the `sl3` package. To simplify this example, we define a binary intervention variable, `parity01` -- an indicator of having one or more children before the current child and a binary outcome, `haz01` -- an indicator of having an above average height for age.
+
+
+
+
+```r
+data(cpp_imputed)
+data &lt;- as.data.table(cpp_imputed)
+
+# generate binary treatment and outcome
+data$parity01 &lt;- as.numeric(data$parity &gt; 0)
+data$haz01 &lt;- as.numeric(data$haz &gt; 0)
+data[is.na(data)] &lt;- 0
+
+# define variable roles
+node_list &lt;- list(
+  W = c("apgar1", "apgar5", "gagebrth", "mage",
+                "meducyrs", "sexn"),
+  A = "parity01",
+  Y = "haz01"
+)
+```
+
+---
+
+# CPP Example - SuperLearner
+
+
+```r
+# define regression tasks
+Q_task &lt;- make_sl3_Task(data, 
+                        covariates=c(node_list$W, node_list$A), 
+                        outcome=node_list$Y)
+g_task &lt;- make_sl3_Task(data, 
+                        covariates=node_list$W, 
+                        outcome=node_list$A)
+
+# simple sl
+stack &lt;- make_learner_stack(Lrnr_glm, Lrnr_mean)
+lrnr_nnls &lt;- make_learner(Lrnr_nnls)
+lrnr_sl &lt;- make_learner(Lrnr_sl, stack, lrnr_nnls)
+
+Q_fit &lt;- lrnr_sl$train(Q_task)
+g_fit &lt;- lrnr_sl$train(g_task)
+```
+
+---
+
+# A Simple TMLE Implementation
+
+
+```r
+# get relevant quantities
+A &lt;- data$parity01
+Y &lt;- data$haz01
+
+#P(A=1|W)
+g1W &lt;- g_fit$predict(g_task)
+
+#E(Y|A=a,W)
+QAW &lt;- Q_fit$predict(Q_task)
+
+#create counterfactual data and make task
+cf_data &lt;- copy(data)
+set(cf_data, , node_list$A, 1)
+cf_Q_task &lt;- make_sl3_Task(cf_data, 
+                           covariates=c(node_list$W, node_list$A), 
+                           outcome=node_list$Y)
+
+#E(Y|A=1,W)
+Q1W &lt;- Q_fit$predict(cf_Q_task)
+```
+
+---
+
+# A Simple TMLE Implementation
+
+
+```r
+####
+# construct clever covariate
+# I(A=1|W)
+HA = A/g1W
+
+# 1/P(A=1|W)
+H1 = 1/g1W
+
+####
+# fit logistic submodel
+submodel_fit &lt;- glm(Y ~ HA - 1 + offset(qlogis(QAW)), family=binomial())
+epsilon &lt;- coef(submodel_fit)
+
+####
+# update likelihood 
+Q1W_star &lt;- plogis(qlogis(Q1W) + H1*epsilon)
+QAW_star &lt;- plogis(qlogis(QAW) + HA*epsilon)
+```
+
+---
+
+# A Simple TMLE Implementation
+
+
+```r
+####
+# calculate IC
+IC &lt;- HA * (Y - QAW_star) + Q1W_star - mean(Q1W_star)
+
+####
+# verify convergence
+mean(IC)
+```
+
+```
+## [1] 1.701467e-12
+```
+
+```r
+####
+# get estimate
+psi_hat &lt;- mean(Q1W_star)
+print(psi_hat)
+```
+
+```
+## [1] 0.5280359
+```
+
+---
+
+# Summary
+
+* We implemented a simple TMLE in ~ 50 lines of code.
+* But we haven't done much to implement TMLE _in general_
+* Lots of things are hardcoded, or not explictly coded at all, including the NPSEM, the submodel, the parameter, and the loss function.
+
+--
+
+* `tmle3` takes a different approach to this problem
+* Defining a TMLE method in `tmle3` loosely follows the roadmap (order is a bit different)
+* Most parts of it are _modular_ in that they can be easily replaced to implement slightly different TMLEs
+
+---
+
+# Model - `tmle3_Node`s
+
+In `tmle3`, we define the NPSEM using the `define_node` function for each node. `define_node` allows a user to specify the node_name, which columns in the data comprise the node, and a list of parent nodes. 
+
+```r
+npsem &lt;- list(
+  define_node("W", c(
+    "apgar1", "apgar5", "gagebrth", "mage",
+    "meducyrs", "sexn"
+  )),
+  define_node("A", c("parity01"), c("W")),
+  define_node("Y", c("haz01"), c("A", "W"))
+)
+```
+
+Nodes also track information about the data types of the variables (continuous, categorical, binomial, etc). Here, that information is being estimated automatically from the data. In the future, each node will also contain information about censoring indicators, where applicable, but this is not yet implemented.
+
+---
+
+# Data - `tmle3_task`
+
+A `tmle3_Task` is an object comprised of observed data, and the NPSEM defined above:
+
+
+```r
+tmle_task &lt;- tmle3_Task$new(data, npsem = npsem)
+```
+
+This task object contains methods to help subset the data as needed for various steps in the tmle process:
+
+
+```r
+#get the outcome node data
+head(tmle_task$get_tmle_node("Y"))
+```
+
+```
+## [1] 1 1 1 0 0 1
+```
+
+```r
+#get the sl3 task corresponding to an outcome regression
+tmle_task$get_regression_task("Y")
+```
+
+```
+## A sl3 Task with 1441 obs and these nodes:
+## $covariates
+##          A         W1         W2         W3         W4         W5 
+## "parity01"   "apgar1"   "apgar5" "gagebrth"     "mage" "meducyrs" 
+##         W6 
+##     "sexn" 
+## 
+## $outcome
+## [1] "haz01"
+## 
+## $id
+## NULL
+## 
+## $weights
+## NULL
+## 
+## $offset
+## NULL
+```
+
+A `tmle3_Task` is a special kind of `sl3` task.
+
+---
+
+
+---
+
+# Likelihood Fits
+
+
+```r
+# define and fit likelihood
+factor_list &lt;- list(
+  define_lf(LF_emp, "W"),
+  define_lf(LF_fit, "A", lrnr_sl),
+  define_lf(LF_fit, "Y", lrnr_sl, type="mean")
+)
+
+likelihood_def &lt;- Likelihood$new(factor_list)
+likelihood &lt;- likelihood_def$train(tmle_task)
+print(likelihood)
+```
+
+```
+## W: Lf_np
+## A: LF_fit
+## Y: LF_fit
+```
+
+---
+
+# Likelihood Interventions
+
+For our CPP example, we'll define a simple intervention where we set all treatment `\(A=1\)`:
+
+
+```r
+intervention &lt;- define_lf(LF_static, "A", value = 1)
+```
+
+---
+
+# Parameter
+
+
+```r
+tsm &lt;- define_param(Param_TSM, likelihood, intervention)
+```
+
+---
+
+# Update
+
+```r
+updater &lt;- tmle3_Update$new(tsm)
+likelihood$update_list &lt;- updater
+```
+
+---
+
+# Fit
+
+
+```r
+tmle_fit &lt;- fit_tmle3(tmle_task, likelihood, tsm, updater)
+print(tmle_fit)
+```
+
+```
+## A tmle3_Fit that took 1 step(s)
+##         param  init_est  tmle_est         se     lower     upper
+## 1: E[Y_{A=1}] 0.5142816 0.5288081 0.01452359 0.5003424 0.5572739
+##    psi_transformed lower_transformed upper_transformed
+## 1:       0.5288081         0.5003424         0.5572739
+```
+
+---
+
+# User Friendly Interface
+
+
+```r
+nodes &lt;- list(W=c("apgar1", "apgar5", "gagebrth", "mage",
+                  "meducyrs", "sexn"),
+              A="parity01",
+              Y="haz01")
+
+learner_list &lt;- list(Y=lrnr_sl, A=lrnr_sl)
+
+
+data2 &lt;- data.table::copy(data) # make a new copy to deal with data.table weirdness
+
+tmle_fit_from_spec &lt;- tmle3(tmle_TSM_all(), data2, nodes, learner_list)
+print(tmle_fit_from_spec)
+```
+
+```
+## A tmle3_Fit that took 1 step(s)
+##         param  init_est  tmle_est         se      lower     upper
+## 1: E[Y_{A=0}] 0.5276866 0.5270697 0.33474453 -0.1290175 1.1831569
+## 2: E[Y_{A=1}] 0.5145596 0.5287765 0.01452199  0.5003139 0.5572391
+##    psi_transformed lower_transformed upper_transformed
+## 1:       0.5270697        -0.1290175         1.1831569
+## 2:       0.5287765         0.5003139         0.5572391
+```
+
+---
+    </textarea>
+<script src="libs/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "zenburn",
+"highlightLines": true,
+"navigation": {
+"scroll": false
+}
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  }
+});
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
