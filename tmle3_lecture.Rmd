@@ -1,6 +1,6 @@
 ---
-title: "tlverse: Implement frameworks, not algorithms"
-date: "04/24/2018"
+title: "`tlverse`: Implement frameworks, not algorithms"
+date: "`r format(Sys.time(), '%Y %b %d (%a), %H:%M')`"
 output:
   xaringan::moon_reader:
     lib_dir: libs
@@ -29,13 +29,15 @@ class: center, middle
 
 ---
 
-# The `tlverse` Ecosystem I
+# The `tlverse` Ecosystem
 
 What is the `tlverse`?
 
-By analogy to [`tidyverse`](https://www.tidyverse.org/):
+By analogy to [`tidyverse`](https://tidyverse.org/):
 
-> The tidyverse is an opinionated collection of R packages designed for data science. All packages share an underlying design philosophy, grammar, and data structures. 
+> The tidyverse is an opinionated collection of R packages designed for data
+> science. All packages share an underlying design philosophy, grammar, and data
+> structures. 
 
 So, `tlverse` is:
 
@@ -44,13 +46,13 @@ So, `tlverse` is:
 
 ---
 
-# The `tlverse` Ecosystem II
+# The `tlverse` Ecosystem
 
 These are the main packages that represent the **core** of `tlverse`:
 
 --
 
-* [`sl3`](https://github.com/jeremyrcoyle/sl3)
+* [`sl3`](https://github.com/tlverse/sl3)
   * _What?_ A modern object-oriented re-implementation of the Super Learner
     algorithm, employing recently developed paradigms for `R` programming.
   * _Why?_ A design that leverages modern tools for fast computation, is
@@ -58,7 +60,7 @@ These are the main packages that represent the **core** of `tlverse`:
 
 --
 
-* [`tmle3`](https://github.com/jeremyrcoyle/tmle3)
+* [`tmle3`](https://github.com/tlverse/tmle3)
   * _What?_ A generalized framework that simplifies Targeted Learning by
     identifying and implementing a series of common regression procedures.
   * _Why?_ A common interface and engine that accommodates current algorithmic
@@ -67,14 +69,14 @@ These are the main packages that represent the **core** of `tlverse`:
 
 ---
 
-# The `tlverse` Ecosystem III
+# The `tlverse` Ecosystem
 
 In addition to the engines that drive development in the `tlverse`, there are
 some supporting packages -- in particular, we have two...
 
 --
 
-* [`origami`](https://github.com/jeremyrcoyle/origami)
+* [`origami`](https://github.com/tlverse/origami)
   * _What?_ A generalized framework for flexible cross-validation
   * _Why?_ Cross-validation is a key part of ensuring error estimates are honest
     and preventing overfitting. It is an essential part of the both the Super
@@ -82,7 +84,7 @@ some supporting packages -- in particular, we have two...
 
 --
 
-* [`delayed`](https://github.com/jeremyrcoyle/delayed)
+* [`delayed`](https://github.com/tlverse/delayed)
   * _What?_ A framework for delayed computations (futures) based on task
     dependencies.
   * _Why?_ Efficient allocation of compute resources is essential when deploying
@@ -95,31 +97,42 @@ some supporting packages -- in particular, we have two...
 
 --
 
-Mark is too productive. Even for point treatment data, we have a huge range of TMLE methodologies:
-* **TMLE Variants:** TMLE, IPCW-TMLE, CV-TMLE, C-TMLE, One-step TMLE, HAL-TMLE, etc
-* **Parameters:** Means under static interventions, dynamic rules, stochastic interventions, ATE, ATT, CDE, NDE, Blip Variance, etc, etc.
+Mark is too productive. Even for point treatment data, we have a huge range of
+TMLE methodologies:
+* **TMLE Variants:** TMLE, IPCW-TMLE, CV-TMLE, C-TMLE, One-step TMLE, HAL-TMLE,
+  etc.
+* **Parameters:** Means under static interventions, dynamic rules, stochastic
+  interventions, ATE, ATT, CDE, NDE, Blip Variance, etc.
 
 --
 
-For each TMLE-based method, someone has probably implemented the estimator at least well enough to run simulations for a paper. However, those implementations are not often maintained after the paper is published, and they might not have been terribly robust in the first place. Example: `opttx`. That means that these methds are not easy for your average user to apply.
+For each TMLE-based method, someone has probably implemented the estimator at
+least well enough to run simulations for a paper. However, those implementations
+are not often maintained after the paper is published, and they might not have
+been terribly robust in the first place. Example: `opttx`. That means that these
+methds are not easy for your average user to apply.
 
 ---
 
-# The Solution - `tlverse/tmle3`
+# The Solution: the `tlverse` and `tmle3`
 
-* Identify the parts of the framework common across a range of methods, and implement those.
-* Build tools to let others build on the framework
-* Build a unified and accessible user interface to these methods
-* Establish a good software development community so that the project can persist past the interest of any one developer.
+* Identify the parts of the framework common across a range of methods, and
+   implement those.
+* Build tools to let others build on the framework.
+* Build a unified and accessible user interface to these methods.
+* Establish a good software development community so that the project can
+   persist past the interest of any one developer.
 
 ---
 # It's Roadmap Time!
 
 Steps 1-3: Define the research question
 
-**Data:** $O=(W \in \mathbb{R}^D ,A \in \{0,1\},Y\in \{0,1\})$ drawn i.i.d. from $P_0$.
+**Data:** $O=(W \in \mathbb{R}^D ,A \in \{0,1\},Y\in \{0,1\})$ drawn i.i.d. from
+$P_0$.
 
-**Model:** $\mathcal{M}$, a nonparametric model that makes no assumptions on $P_0$. 
+**Model:** $\mathcal{M}$, a nonparametric model that makes no assumptions on
+$P_0$. 
 
 We will consider the following NPSEM: 
 
@@ -127,30 +140,39 @@ $$W=f_W(U_W)$$
 $$A=f_A(W,U_A)$$
 $$Y=f_Y(W,U_Y)$$
 
-Which corresponds to the likelihood factorization $P_0=P_0(Y|A,W)P_0(A|W)P_0(W)$
+Which corresponds to the likelihood factorization
+$P_0 = P_0(Y \mid A,W)P_0(A \mid W)P_0(W)$
 
-**Parameter:** Treatment Specific Mean $\Psi(P)=E_W[E[Y|A=1,W]]$
+**Parameter:** Treatment Specific Mean $\Psi(P) = E_W[E[Y \mid A = 1, W]]$
 
 ---
 # It's Roadmap Time!
 Steps 4-6: Estimation
 
-**Super Learner (Likelihood Estimation):** Identify and estimate the relevant likelihood factors with Super Learner
+**Super Learner (Likelihood Estimation):** Identify and estimate the relevant
+likelihood factors with Super Learner
 
-**TMLE:** Update our initial likelihood estimates to solve the EIF, apply parameter mapping to updated likelihood. In addition to the elements defined in steps 1-3, this requires the following:
+**TMLE:** Update our initial likelihood estimates to solve the EIF, apply
+parameter mapping to updated likelihood. In addition to the elements defined in
+steps 1-3, this requires the following:
 
-* **EIF** -- for TSM $\frac{I(A=1)}{P(A=1|W)}(Y - E[Y|A,W]) + E[Y|A=1,W] - \psi$
-* **submodel** -- we'll use logistic submodel
+* **EIF** -- for TSM $\frac{I(A = 1)}{P(A = 1 \mid W)}(Y - E[Y \mid A, W]) +
+   E[Y \mid A = 1 ,W] - \psi$
+* **submodel** -- we'll use a logistic submodel
 * **loss function** -- we'll use log-likelihood loss
-* **solver** (iterative vs one-step) -- not relevant for TSM
+* **solver** (iterative vs. one-step) -- not relevant for TSM
 
 **Inference:** Use the variance of the EIF to construct confidence intervals
 
 ---
 
-# CPP Example - Define the research question
+# Example: Define the Research Question
 
-We use data from the Collaborative Perinatal Project (CPP), available in the `sl3` package. To simplify this example, we define a binary intervention variable, `parity01` -- an indicator of having one or more children before the current child and a binary outcome, `haz01` -- an indicator of having an above average height for age.
+We use data from the Collaborative Perinatal Project (CPP), available in the
+`sl3` package. To simplify this example, we define a binary intervention
+variable, `parity01` -- an indicator of having one or more children before the
+current child and a binary outcome, `haz01` -- an indicator of having an above
+average height for age.
 
 ```{r setup, echo=FALSE, message=FALSE}
 library(sl3)
@@ -178,7 +200,7 @@ node_list <- list(
 
 ---
 
-# CPP Example - SuperLearner with `sl3`
+# Example: Super Learning with `sl3`
 
 ```{r cpp_sl}
 
@@ -277,20 +299,25 @@ print(psi_hat)
 
 * We implemented a simple TMLE in ~ 50 lines of code.
 * But we haven't done much to implement TMLE _in general_
-* Lots of things are hardcoded, or not explictly coded at all, including the NPSEM, the submodel, the parameter, and the loss function.
+* Lots of things are hardcoded, or not explictly coded at all, including the
+   NPSEM, the submodel, the parameter, and the loss function.
 
 
 --
 
 * `tmle3` takes a different approach to this problem
-* Defining a TMLE method in `tmle3` loosely follows the roadmap (order is a bit different)
-* Most parts of it are _modular_ in that they can be easily replaced to implement slightly different TMLEs
+* Defining a TMLE method in `tmle3` loosely follows the roadmap (order is a bit
+   different)
+* Most parts of it are _modular_ in that they can be easily replaced to
+   implement slightly different TMLEs
 
 ---
 
-# Model -- `tmle3_Node`s
+# Model: `tmle3_Node`s
 
-In `tmle3`, we define the NPSEM using the `define_node` function for each node. `define_node` allows a user to specify the node_name, which columns in the data comprise the node, and a list of parent nodes. 
+In `tmle3`, we define the NPSEM using the `define_node` function for each node.
+`define_node` allows a user to specify the node_name, which columns in the data
+comprise the node, and a list of parent nodes. 
 ``` {r define_npsem}
 npsem <- list(
   define_node("W", c(
@@ -302,19 +329,25 @@ npsem <- list(
 )
 ```
 
-Nodes also track information about the data types of the variables (continuous, categorical, binomial, etc). Here, that information is being estimated automatically from the data. In the future, each node will also contain information about censoring indicators, where applicable, but this is not yet implemented.
+Nodes also track information about the data types of the variables (continuous,
+categorical, binomial, etc). Here, that information is being estimated
+automatically from the data. In the future, each node will also contain
+information about censoring indicators, where applicable, but this is not yet
+implemented.
 
 ---
 
-# Data -- `tmle3_task`
+# Data: `tmle3_task`
 
-A `tmle3_Task` is an object comprised of observed data, and the NPSEM defined above:
+A `tmle3_Task` is an object comprised of observed data, and the NPSEM defined
+above:
 
 ```{r tmle3_data}
 tmle_task <- tmle3_Task$new(data, npsem = npsem)
 ```
 
-This task object contains methods to help subset the data as needed for various steps in the tmle process:
+This task object contains methods to help subset the data as needed for various
+steps in the tmle process:
 
 ```{r subset_task}
 #get the outcome node data
@@ -325,22 +358,34 @@ A `tmle3_Task` is a special kind of `sl3` task.
 
 ---
 
-# Likelihood Fits -- `Likelihood`
+# Likelihood Fits: `Likelihood`
 
-`tmle3` models likelihoods as a list of likelihood factor objects, where each likelihood factor object describes either _a priori_ knowledge or an estimation strategy for the corresponding likelihood factor. These objects all inherit from the `LF_base` base class, and there are different types depending on which of a range of estimation strategies or _a priori_ knowledge is appropriate.
+`tmle3` models likelihoods as a list of likelihood factor objects, where each
+likelihood factor object describes either _a priori_ knowledge or an estimation
+strategy for the corresponding likelihood factor. These objects all inherit from
+the `LF_base` base class, and there are different types depending on which of a
+range of estimation strategies or _a priori_ knowledge is appropriate.
 
-In some cases, a full conditional density for a particular factor is not necessary. Instead, a conditional mean (a much easier quantity to estimate), is all that's required. Although conditional means are not truly likelihood factors, conditional means are also modeled using using likelihood factor objects.
+In some cases, a full conditional density for a particular factor is not
+necessary. Instead, a conditional mean (a much easier quantity to estimate), is
+all that's required. Although conditional means are not truly likelihood
+factors, conditional means are also modeled using using likelihood factor
+objects.
 
 Examples:
 
 * `LF_fit` - estimate a likelihood factor using `sl3` learners
-* `LF_emp` - estimate a likelihood factor using NP-MLE (marginal likelihood only)
+* `LF_emp` - estimate a likelihood factor using NP-MLE (marginal likelihood
+   only)
 
 ---
 
-# Likelihood Fits -- `Likelihood`
+# Likelihood Fits: `Likelihood`
 
-Going back to our CPP example, we will estimate the marginal likelihood of $W$, using NP-MLE, the conditional density of $A$ given $W$ using a GLM fit via `sl3` and the conditional mean of $Y$ given $A$ and $W$ using another GLM fit via `sl3`:
+Going back to our CPP example, we will estimate the marginal likelihood of $W$,
+using NP-MLE, the conditional density of $A$ given $W$ using a GLM fit via `sl3`
+and the conditional mean of $Y$ given $A$ and $W$ using another GLM fit via
+`sl3`:
 
 ```{r likelihood}
 # define and fit likelihood
@@ -355,13 +400,15 @@ likelihood <- likelihood_def$train(tmle_task)
 print(likelihood)
 ```
 
-A `tmle3` `Likelihood` is actually a special type of `sl3` learner, so the syntax to train it on data is analogous.
+A `tmle3` `Likelihood` is actually a special type of `sl3` learner, so the
+syntax to train it on data is analogous.
 
 ---
 
-# Likelihood Fits -- `Likelihood`
+# Likelihood Fits: `Likelihood`
 
-Having fit the likelihood, we can now get likelihood values for any `tmle3_task`:
+Having fit the likelihood, we can now get likelihood values for any
+`tmle3_task`:
 
 ```{r likelihood values}
 likelihood_values <- likelihood$get_likelihoods(tmle_task)
@@ -370,14 +417,19 @@ head(likelihood_values)
 
 ---
 
-# Counterfactuals -- `CF_Likelihood`
+# Counterfactuals: `CF_Likelihood`
 
 
-In `tmle3`, interventions are modeled by likelihoods where one or more likelihood factors is replaced with a counterfactual version representing some intervention. 
+In `tmle3`, interventions are modeled by likelihoods where one or more
+likelihood factors is replaced with a counterfactual version representing some
+intervention. 
 
-`tmle3` defines the `CF_Likelihood` class, which inherits from `Likelihood`, and takes an `observed_likelihood` and an `intervention_list`. 
+`tmle3` defines the `CF_Likelihood` class, which inherits from `Likelihood`, and
+takes an `observed_likelihood` and an `intervention_list`. 
 
-For our CPP example, we'll define a simple intervention where we set all treatment $A=1$. We do this by defining a static likelihood factor, as a simple indicator function $P(A|W)=I(A=1)$
+For our CPP example, we'll define a simple intervention where we set all
+treatment $A=1$. We do this by defining a static likelihood factor, as a simple
+indicator function $P(A \mid W) = I(A = 1)$
 
 ```{r intervention}
 intervention <- define_lf(LF_static, "A", value = 1)
@@ -389,11 +441,13 @@ We can then use this to construct a counterfactual likelihood:
 cf_likelihood <- make_CF_Likelihood(likelihood, intervention)
 ```
 
-A `cf_likelihood` is a likelihood object, and so has the same behavior as the observed likelihood object defined above, but with the observed likelihood factors being replaced by the defined intervention likelihood factors.
+A `cf_likelihood` is a likelihood object, and so has the same behavior as the
+observed likelihood object defined above, but with the observed likelihood
+factors being replaced by the defined intervention likelihood factors.
 
 ---
 
-# Counterfactuals -- `CF_Likelihood`
+# Counterfactuals: `CF_Likelihood`
 
 In particular, we can get likelihood values under the counterfactual likelihood:
 
@@ -402,54 +456,77 @@ cf_likelihood_values <- cf_likelihood$get_likelihoods(tmle_task)
 head(cf_likelihood_values)
 ```
 
-We see that the likelihood values for the $A$ node are all either 0 or 1, as would be expected from an indicator likelihood function. In addition, the likelihood values for the non-intervention nodes have not changed.
+We see that the likelihood values for the $A$ node are all either 0 or 1, as
+would be expected from an indicator likelihood function. In addition, the
+likelihood values for the non-intervention nodes have not changed.
 ---
 
-# Parameter -- `Param_base`
+# Parameter: `Param_base`
 
-In the TMLE framework, we define a target parameter $\Psi(P)$ as a mapping from a probability distribution $P \in \mathcal{M}$ to a set of real numbers $\mathbb{R}^d$. Here $\mathcal{M}$ is implied by the NPSEM we defined above. 
+In the TMLE framework, we define a target parameter $\Psi(P)$ as a mapping from
+a probability distribution $P \in \mathcal{M}$ to a set of real numbers
+$\mathbb{R}^d$. Here $\mathcal{M}$ is implied by the NPSEM we defined above. 
 
-In `tmle3`, we define parameter objects as objects inheriting from the `Param_base` class, which keep track of not only the mapping from a probability distribution to a parameter value, but also the corresponding EIF of the parameter, and the "clever covariates" needed to calculate a TMLE update to the likelihood. These values are calculated using the `tmle3_task`, `Likelihood`, and `CF_likelihood` objects defined above.
+In `tmle3`, we define parameter objects as objects inheriting from the
+`Param_base` class, which keep track of not only the mapping from a probability
+distribution to a parameter value, but also the corresponding EIF of the
+parameter, and the "clever covariates" needed to calculate a TMLE update to the
+likelihood. These values are calculated using the `tmle3_task`, `Likelihood`,
+and `CF_likelihood` objects defined above.
 
 
-Here, we define a treatment specific mean (TSM) parameter based on the intervention we defined previously:
+Here, we define a treatment specific mean (TSM) parameter based on the
+intervention we defined previously:
 
 ```{r param}
 tsm <- define_param(Param_TSM, likelihood, intervention)
 ```
 
-This structure will be documented so that new parameters can be implemented easily, analogous to learners in `sl3`.
+This structure will be documented so that new parameters can be implemented
+easily, analogous to learners in `sl3`.
 
 ---
 
 # Update
 
-The update procedure component of `tmle3` is currently in flux. The current structure is as follows: We have an object, `tmle3_Update`, which calculates the individual update steps using `tmle3_Update$update_step`. This contains the submodel and loss function needed to solve the EIF. 
+The update procedure component of `tmle3` is currently in flux. The current
+structure is as follows: We have an object, `tmle3_Update`, which calculates the
+individual update steps using `tmle3_Update$update_step`. This contains the
+submodel and loss function needed to solve the EIF. 
 
 ```{r update}
 updater <- tmle3_Update$new(tsm)
 likelihood$update_list <- updater
 ```
 
-This is currently the weak link in `tmle3`, and it's under active development to make it faster and more elegant.
+This is currently the weak link in `tmle3`, and it's under active development to
+make it faster and more elegant.
 
 ---
 
 # Fit
 
-Now that we have specified all the components required for the TMLE procedure, we can generate an object that manages all the components and updates the likelihood and solves the EIF.
+Now that we have specified all the components required for the TMLE procedure,
+we can generate an object that manages all the components and updates the
+likelihood and solves the EIF.
 
 ```{r fit_tmle}
 tmle_fit <- fit_tmle3(tmle_task, likelihood, tsm, updater)
 print(tmle_fit)
 ```
 
-Currently, the solver is iterative, but we plan to extend it to accomodate the one-step approach.
+Currently, the solver is iterative, but we plan to extend it to accomodate the
+one-step approach.
 ---
 
 # User Friendly Interface
 
-The `tmle3` framework described above is general, and allows most components of the TMLE procedure to be specified in a modular way. However, most end users will not be interested in manually specifying all of these components. Therefore, `tmle3` implements a `tmle3_Spec` object that bundles a set of components into a _specification_ that, with minimal additional detail, can be run by an end user:
+The `tmle3` framework described above is general, and allows most components of
+the TMLE procedure to be specified in a modular way. However, most end users
+will not be interested in manually specifying all of these components.
+Therefore, `tmle3` implements a `tmle3_Spec` object that bundles a set of
+components into a _specification_ that, with minimal additional detail, can be
+run by an end user:
 
 ```{r tmle_spec}
 nodes <- list(W=c("apgar1", "apgar5", "gagebrth", "mage",
@@ -460,7 +537,7 @@ nodes <- list(W=c("apgar1", "apgar5", "gagebrth", "mage",
 learner_list <- list(Y=lrnr_sl, A=lrnr_sl)
 
 
-data2 <- data.table::copy(data) # make a new copy to deal with data.table weirdness
+data2 <- data.table::copy(data) # make a new copy to deal with data.table
 
 tmle_fit_from_spec <- tmle3(tmle_TSM_all(), data2, nodes, learner_list)
 print(tmle_fit_from_spec)
@@ -470,7 +547,11 @@ print(tmle_fit_from_spec)
 
 # Summary
 
-* We have tried to explicitly model all the steps of the roadmap, including all the different components necessary to specify and implement TMLE methods.
-* We believe this results in a general framework that can implement most, if not all, of the TMLE methods being developed.
-* Much more work needs to be done on both the framework and building out the various TMLE methods on top of the framework.
-* Success will depend on engagement with the broader Targeted Learning community -- We'd appreciate any feedback or contributions you can offer!
+* We have tried to explicitly model all the steps of the roadmap, including all
+   the different components necessary to specify and implement TMLE methods.
+* We believe this results in a general framework that can implement most, if not
+   all, of the TMLE methods being developed.
+* Much more work needs to be done on both the framework and building out the
+   various TMLE methods on top of the framework.
+* Success will depend on engagement with the broader Targeted Learning community
+   -- We'd appreciate any feedback or contributions you can offer!
