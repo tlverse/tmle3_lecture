@@ -11,7 +11,7 @@
 class: center, middle, inverse, title-slide
 
 # <code>tlverse</code>: Implement frameworks, not algorithms
-### 2018 Apr 23 (Mon), 23:25
+### 2018 Apr 24 (Tue), 09:39
 
 ---
 
@@ -28,26 +28,26 @@ class: center, middle
 
 What is the `tlverse`?
 
-By analogy to [`tidyverse`](https://tidyverse.org/):
+By analogy to the [`tidyverse`](https://tidyverse.org/):
 
 &gt; The tidyverse is an opinionated collection of R packages designed for data
 &gt; science. All packages share an underlying design philosophy, grammar, and data
 &gt; structures. 
 
-So, `tlverse` is:
+So, the [`tlverse`](https://tlverse.org) is
 
-* an opinioned collection of R packages for Targeted Learning
-* sharing an underlying philosophy, grammar, and data structures
+* an opinionated collection of R packages for Targeted Learning
+* sharing an underlying philosophy, grammar, and set of data structures
 
 ---
 
 # The `tlverse` Ecosystem
 
-These are the main packages that represent the **core** of `tlverse`:
+These are the main packages that represent the **core** of the `tlverse`:
 
 --
 
-* [`sl3`](https://github.com/tlverse/sl3)
+* [`sl3`](https://github.com/tlverse/sl3): Modern Super Learning with Pipelines
   * _What?_ A modern object-oriented re-implementation of the Super Learner
     algorithm, employing recently developed paradigms for `R` programming.
   * _Why?_ A design that leverages modern tools for fast computation, is
@@ -55,9 +55,10 @@ These are the main packages that represent the **core** of `tlverse`:
 
 --
 
-* [`tmle3`](https://github.com/tlverse/tmle3)
+* [`tmle3`](https://github.com/tlverse/tmle3): An Engine for Targeted Learning
   * _What?_ A generalized framework that simplifies Targeted Learning by
-    identifying and implementing a series of common regression procedures.
+    identifying and implementing a series of common statistical estimation
+    procedures.
   * _Why?_ A common interface and engine that accommodates current algorithmic
     approaches to Targeted Learning and is still flexible enough to remain the
     engine even as new techniques are developed.
@@ -71,7 +72,8 @@ some supporting packages -- in particular, we have two...
 
 --
 
-* [`origami`](https://github.com/tlverse/origami)
+* [`origami`](https://github.com/tlverse/origami): A Generalized Framework for
+   Cross-Validation
   * _What?_ A generalized framework for flexible cross-validation
   * _Why?_ Cross-validation is a key part of ensuring error estimates are honest
     and preventing overfitting. It is an essential part of the both the Super
@@ -79,7 +81,8 @@ some supporting packages -- in particular, we have two...
 
 --
 
-* [`delayed`](https://github.com/tlverse/delayed)
+* [`delayed`](https://github.com/tlverse/delayed): Parallelization Framework for
+   Dependent Tasks
   * _What?_ A framework for delayed computations (futures) based on task
     dependencies.
   * _Why?_ Efficient allocation of compute resources is essential when deploying
@@ -94,8 +97,10 @@ some supporting packages -- in particular, we have two...
 
 Mark is too productive. Even for point treatment data, we have a huge range of
 TMLE methodologies:
+
 * **TMLE Variants:** TMLE, IPCW-TMLE, CV-TMLE, C-TMLE, One-step TMLE, HAL-TMLE,
-  etc.
+   Targeted HAL, etc.
+
 * **Parameters:** Means under static interventions, dynamic rules, stochastic
   interventions, ATE, ATT, CDE, NDE, Blip Variance, etc.
 
@@ -104,36 +109,39 @@ TMLE methodologies:
 For each TMLE-based method, someone has probably implemented the estimator at
 least well enough to run simulations for a paper. However, those implementations
 are not often maintained after the paper is published, and they might not have
-been terribly robust in the first place. Example: `opttx`. That means that these
-methds are not easy for your average user to apply.
+been terribly robust in the first place (e.g., `opttx`). Thus, these methods are
+not easy for the average user to apply.
 
 ---
 
-# The Solution: the `tlverse` and `tmle3`
+# The Solution: `tlverse` + `tmle3`
 
 * Identify the parts of the framework common across a range of methods, and
    implement those.
+
 * Build tools to let others build on the framework.
+
 * Build a unified and accessible user interface to these methods.
+
 * Establish a good software development community so that the project can
    persist past the interest of any one developer.
 
 ---
 # It's Roadmap Time!
 
-Steps 1-3: Define the research question
+&lt;u&gt;**Steps 1-3: Define the research question**&lt;/u&gt;
 
-**Data:** `\(O=(W \in \mathbb{R}^D ,A \in \{0,1\},Y\in \{0,1\})\)` drawn i.i.d. from
-`\(P_0\)`.
+**Data:** `\(O = (W, A, Y) \sim P_0 \in \mathcal{M}\)`, where, for simplicity,
+consider `\(W \in \mathbb{R}^d\)`, `\(A \in \{0,1\}\)`, `\(Y\in \{0,1\}\)`.
 
-**Model:** `\(\mathcal{M}\)`, a nonparametric model that makes no assumptions on
-`\(P_0\)`. 
+**Model:** `\(\mathcal{M}\)`, a nonparametric model that makes no assumptions on the
+distribution governing the data `\(P_0\)`. 
 
-We will consider the following NPSEM: 
+We consider the following _nonparametric structural equation model_ (NPSEM): 
 
-`$$W=f_W(U_W)$$`
-`$$A=f_A(W,U_A)$$`
-`$$Y=f_Y(W,U_Y)$$`
+`$$W = f_W(U_W)$$`
+`$$A = f_A(W, U_A)$$`
+`$$Y = f_Y(W, U_Y)$$`
 
 Which corresponds to the likelihood factorization
 `\(P_0 = P_0(Y \mid A,W)P_0(A \mid W)P_0(W)\)`
@@ -142,22 +150,24 @@ Which corresponds to the likelihood factorization
 
 ---
 # It's Roadmap Time!
-Steps 4-6: Estimation
+
+&lt;u&gt;**Steps 4-6: Estimation**&lt;/u&gt;
 
 **Super Learner (Likelihood Estimation):** Identify and estimate the relevant
 likelihood factors with Super Learner
 
-**TMLE:** Update our initial likelihood estimates to solve the EIF, apply
-parameter mapping to updated likelihood. In addition to the elements defined in
-steps 1-3, this requires the following:
+**TMLE:** Update our initial likelihood estimates to solve the efficient
+influence function (EIF), apply the parameter mapping to the updated likelihood.
 
-* **EIF** -- for TSM $\frac{I(A = 1)}{P(A = 1 \mid W)}(Y - E[Y \mid A, W]) +
-   E[Y \mid A = 1 ,W] - \psi$
+In addition to the elements defined in steps 1-3, this requires the following:
+
+* **EIF** -- for TSM `\(\frac{I(A = 1)}{P(A = 1 \mid W)}(Y - E[Y \mid A, W]) + E[Y \mid A = 1 ,W] - \psi\)`
 * **submodel** -- we'll use a logistic submodel
 * **loss function** -- we'll use log-likelihood loss
-* **solver** (iterative vs. one-step) -- not relevant for TSM
+* **solver** (iterative vs. one-step) -- not relevant for the TSM parameter
 
-**Inference:** Use the variance of the EIF to construct confidence intervals
+**Inference:** Use the variance of the EIF to construct confidence intervals:
+`$$\sigma^2 = \frac{1}{n}\sum_{i = 1}^n D^2(O_i) + o_p\left(\frac{1}{\sqrt{n}}\right)$$`
 
 ---
 
@@ -281,7 +291,7 @@ mean(IC)
 ```
 
 ```
-## [1] 1.742368e-12
+## [1] 1.748805e-12
 ```
 
 ```r
@@ -292,7 +302,7 @@ print(psi_hat)
 ```
 
 ```
-## [1] 0.5280569
+## [1] 0.5280257
 ```
 
 ---
@@ -300,16 +310,19 @@ print(psi_hat)
 # Summary
 
 * We implemented a simple TMLE in ~ 50 lines of code.
+
 * But we haven't done much to implement TMLE _in general_
+
 * Lots of things are hardcoded, or not explictly coded at all, including the
    NPSEM, the submodel, the parameter, and the loss function.
-
 
 --
 
 * `tmle3` takes a different approach to this problem
+
 * Defining a TMLE method in `tmle3` loosely follows the roadmap (order is a bit
    different)
+
 * Most parts of it are _modular_ in that they can be easily replaced to
    implement slightly different TMLEs
 
@@ -421,7 +434,7 @@ syntax to train it on data is analogous.
 
 ---
 
-# Likelihood Fits -- `Likelihood`
+# Likelihood Fits: `Likelihood`
 
 Having fit the likelihood, we can now get likelihood values for any
 `tmle3_task`:
@@ -434,12 +447,12 @@ head(likelihood_values)
 
 ```
 ##               W         A         Y
-## 1: 0.0006939625 0.6331284 0.5763574
-## 2: 0.0006939625 0.6331284 0.5763574
-## 3: 0.0006939625 0.8371395 0.6735092
-## 4: 0.0006939625 0.8371395 0.6735092
-## 5: 0.0006939625 0.8371395 0.6735092
-## 6: 0.0006939625 0.5912261 0.4658779
+## 1: 0.0006939625 0.6328863 0.5761324
+## 2: 0.0006939625 0.6328863 0.5761324
+## 3: 0.0006939625 0.8372018 0.6753845
+## 4: 0.0006939625 0.8372018 0.6753845
+## 5: 0.0006939625 0.8372018 0.6753845
+## 6: 0.0006939625 0.5910001 0.4632644
 ```
 
 ---
@@ -488,12 +501,12 @@ head(cf_likelihood_values)
 
 ```
 ##               W A         Y
-## 1: 0.0006939625 1 0.5763574
-## 2: 0.0006939625 1 0.5763574
-## 3: 0.0006939625 0 0.6735092
-## 4: 0.0006939625 0 0.6735092
-## 5: 0.0006939625 0 0.6735092
-## 6: 0.0006939625 1 0.4658779
+## 1: 0.0006939625 1 0.5761324
+## 2: 0.0006939625 1 0.5761324
+## 3: 0.0006939625 0 0.6753845
+## 4: 0.0006939625 0 0.6753845
+## 5: 0.0006939625 0 0.6753845
+## 6: 0.0006939625 1 0.4632644
 ```
 
 We see that the likelihood values for the `\(A\)` node are all either 0 or 1, as
@@ -561,32 +574,40 @@ print(tmle_fit)
 ```
 ## A tmle3_Fit that took 1 step(s)
 ##         param  init_est  tmle_est         se     lower     upper
-## 1: E[Y_{A=1}] 0.5317636 0.5280046 0.01462076 0.4993484 0.5566607
+## 1: E[Y_{A=1}] 0.5305745 0.5280561 0.01462578 0.4993901 0.5567221
 ##    psi_transformed lower_transformed upper_transformed
-## 1:       0.5280046         0.4993484         0.5566607
+## 1:       0.5280561         0.4993901         0.5567221
 ```
 
 Currently, the solver is iterative, but we plan to extend it to accomodate the
 one-step approach.
+
 ---
 
-# User Friendly Interface
+# User-Friendly Interface
 
-The `tmle3` framework described above is general, and allows most components of
-the TMLE procedure to be specified in a modular way. However, most end users
-will not be interested in manually specifying all of these components.
-Therefore, `tmle3` implements a `tmle3_Spec` object that bundles a set of
-components into a _specification_ that, with minimal additional detail, can be
-run by an end user:
+* The `tmle3` framework described above is general, and allows most components of
+   the TMLE procedure to be specified in a modular way.
+
+* However, most end-users will not be interested in manually specifying all of
+   these components.
+
+* Therefore, `tmle3` implements a `tmle3_Spec` object that bundles a set of
+   components into a _specification_ that, with minimal additional detail, can
+   be run by an end-user:
+
+---
+
+# User-Friendly Interface
 
 
 ```r
-nodes &lt;- list(W=c("apgar1", "apgar5", "gagebrth", "mage",
+nodes &lt;- list(W = c("apgar1", "apgar5", "gagebrth", "mage",
                   "meducyrs", "sexn"),
-              A="parity01",
-              Y="haz01")
+              A = "parity01",
+              Y = "haz01")
 
-learner_list &lt;- list(Y=lrnr_sl, A=lrnr_sl)
+learner_list &lt;- list(Y = lrnr_sl, A = lrnr_sl)
 
 
 data2 &lt;- data.table::copy(data) # make a new copy to deal with data.table
@@ -598,11 +619,11 @@ print(tmle_fit_from_spec)
 ```
 ## A tmle3_Fit that took 1 step(s)
 ##         param  init_est  tmle_est         se      lower     upper
-## 1: E[Y_{A=0}] 0.6629909 0.6514439 0.45266328 -0.2357599 1.5386476
-## 2: E[Y_{A=1}] 0.5313156 0.5280240 0.01462331  0.4993629 0.5566852
+## 1: E[Y_{A=0}] 0.6647247 0.6529347 0.43087967 -0.1915739 1.4974434
+## 2: E[Y_{A=1}] 0.5310694 0.5280384 0.01462398  0.4993759 0.5567009
 ##    psi_transformed lower_transformed upper_transformed
-## 1:       0.6514439        -0.2357599         1.5386476
-## 2:       0.5280240         0.4993629         0.5566852
+## 1:       0.6529347        -0.1915739         1.4974434
+## 2:       0.5280384         0.4993759         0.5567009
 ```
 
 ---
@@ -611,10 +632,13 @@ print(tmle_fit_from_spec)
 
 * We have tried to explicitly model all the steps of the roadmap, including all
    the different components necessary to specify and implement TMLE methods.
+
 * We believe this results in a general framework that can implement most, if not
    all, of the TMLE methods being developed.
+
 * Much more work needs to be done on both the framework and building out the
    various TMLE methods on top of the framework.
+
 * Success will depend on engagement with the broader Targeted Learning community
    -- We'd appreciate any feedback or contributions you can offer!
     </textarea>
